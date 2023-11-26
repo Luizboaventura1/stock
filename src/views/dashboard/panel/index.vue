@@ -15,7 +15,7 @@
     </nav>
     <v-container class="h-100 ma-auto">
       <AnalysisPanelRoot>
-        <v-col cols="12" sm="4" class="d-flex justify-center">
+        <v-col cols="12" sm="4" class="d-flex justify-center pa-0">
           <CardPanel>
             <TitleCardPanel sm> Total in stock </TitleCardPanel>
             <TitleComponent md>
@@ -23,7 +23,11 @@
             </TitleComponent>
           </CardPanel>
         </v-col>
-        <v-col cols="12" sm="4" class="d-flex justify-center">
+        <v-col
+          cols="12"
+          sm="4"
+          class="d-flex justify-center pa-0 px-0 py-4 py-sm-0 px-sm-4"
+        >
           <CardPanel>
             <TitleCardPanel sm> Total in departure </TitleCardPanel>
             <TitleComponent md>
@@ -31,7 +35,7 @@
             </TitleComponent>
           </CardPanel>
         </v-col>
-        <v-col cols="12" sm="4" class="d-flex justify-center">
+        <v-col cols="12" sm="4" class="d-flex justify-center pa-0">
           <CardPanel>
             <TitleCardPanel sm> Total products </TitleCardPanel>
             <TitleComponent md>
@@ -41,9 +45,9 @@
         </v-col>
       </AnalysisPanelRoot>
       <header class="d-flex justify-start w-100">
-        <AddProductButton @EventButton="handlerAddProduct.open()">
+        <addProductButton @EventButton="handlerAddProduct.open()">
           Add Product
-        </AddProductButton>
+        </addProductButton>
       </header>
       <v-main class="my-7">
         <v-row class="w-100">
@@ -152,9 +156,9 @@
         label="Quantity"
         v-model="quantity"
       ></v-text-field>
-      <AddProductButton @EventButton="addNewProduct">
+      <addProductButton @EventButton="addNewProduct">
         Add new product
-      </AddProductButton>
+      </addProductButton>
     </AddProductModal>
 
     <!--Edit Product-->
@@ -190,9 +194,9 @@
         label="Quantity"
         v-model="editQuantity"
       ></v-text-field>
-      <AddProductButton @EventButton="EditProduct(currentIdProduct)">
+      <addProductButton @EventButton="EditProduct(currentIdProduct)">
         Confirm
-      </AddProductButton>
+      </addProductButton>
     </AddProductModal>
 
     <!--Leave product-->
@@ -206,38 +210,30 @@
         <CloseButton @EventButton="handlerLeaveProduct.close()" size="30" />
       </nav>
       <v-divider class="my-4" />
-      <v-text-field
-        :rules="formRules.productRules"
-        label="Product name"
-        v-model="leaveProduct"
-      ></v-text-field>
-      <v-text-field
-        :rules="formRules.valueRules"
-        label="Value"
-        prefix="R$"
-        v-model="leaveValue"
-      ></v-text-field>
-      <v-text-field
-        :rules="formRules.weightRules"
-        label="Weight"
-        suffix="Kg"
-        v-model="leaveWeight"
-      ></v-text-field>
+      <TitleCardPanel md class="mb-3">
+        How many products will come out?
+      </TitleCardPanel>
+      <TitleComponent sm class="mb-3">
+        Total products: {{ leaveQuantity }}
+      </TitleComponent>
       <v-text-field
         :rules="formRules.quantityRules"
         label="Quantity"
-        v-model="leaveQuantity"
+        v-model="quantityOfProductsLeft"
+        type="number"
+        :maxLength="leaveQuantity"
+        @input="validateInput"
       ></v-text-field>
-      <AddProductButton @EventButton="LeaveProduct(currentIdProduct)">
+      <addProductButton @EventButton="LeaveProduct(currentIdProduct)">
         Confirm
-      </AddProductButton>
+      </addProductButton>
     </AddProductModal>
   </v-app>
 </template>
 
 <script setup>
 import TitleComponent from "@/components/TitleComponent.vue";
-import AddProductButton from "@/components/addProductButton.vue";
+import addProductButton from "@/components/addProductButton.vue";
 import AddProductModal from "@/components/AddProductModal/AddProductModal.vue";
 import CloseButton from "@/components/CloseButton.vue";
 import EditButton from "@/components/EditButton.vue";
@@ -264,7 +260,7 @@ const theme = useTheme();
 
 let idUser = ref("");
 
-let stock = ref("");
+let stock = ref({ input: [], output: [] });
 
 // Modal add product
 
@@ -293,15 +289,18 @@ onMounted(async () => {
     idUser.value = doc.id;
 
     // get the total value of stock and quantity of products
-    doc.data().stock.input.forEach((product) => {
-      totalValueInStock.value += parseInt(product.value);
-      totalProducts.value += parseInt(product.quantity);
-    });
-
+    if (doc.data().stock.input != undefined) {
+      doc.data().stock.input.forEach((product) => {
+        totalValueInStock.value += parseInt(product.value);
+        totalProducts.value += parseInt(product.quantity);
+      });
+    }
     // get the total value of exits
-    doc.data().stock.output.forEach((product) => {
-      totalValueInDepartures.value += parseInt(product.value);
-    });
+    if (doc.data().stock.output != undefined) {
+      doc.data().stock.output.forEach((product) => {
+        totalValueInDepartures.value += parseInt(product.value);
+      });
+    }
   });
 });
 
@@ -317,7 +316,7 @@ const addNewProduct = async () => {
     product.value.length != 0 &&
     quantity.value.length != 0 &&
     value.value.length != 0 &&
-    quantity.value.length
+    quantity.value.length != 0
   ) {
     stock.value.input.push({
       id: stock.value.input.length,
@@ -327,12 +326,8 @@ const addNewProduct = async () => {
       value: value.value,
     });
 
-    const docRef = doc(db, "user", idUser.value);
-
-    await updateDoc(docRef, {
-      stock: stock.value,
-    });
-
+    saveDataToFirestore();
+    updateTheAnalysis();
     handlerAddProduct.close();
   }
 };
@@ -371,12 +366,8 @@ const EditProduct = async (id) => {
     stock.value.input[id].quantity = editQuantity.value;
     stock.value.input[id].value = editValue.value;
 
-    const docRef = doc(db, "user", idUser.value);
-
-    await updateDoc(docRef, {
-      stock: stock.value,
-    });
-
+    saveDataToFirestore();
+    updateTheAnalysis();
     handlerEditProduct.close();
   }
 };
@@ -387,6 +378,7 @@ let leaveProduct = ref("");
 let leaveWeight = ref("");
 let leaveQuantity = ref("");
 let leaveValue = ref("");
+let quantityOfProductsLeft = ref();
 
 let stateModalLeaveProduct = ref(false);
 
@@ -407,25 +399,71 @@ const LeaveProduct = async (id) => {
     leaveProduct.value.length != 0 &&
     leaveWeight.value.length != 0 &&
     leaveValue.value.length != 0 &&
-    leaveQuantity.value.length
+    leaveQuantity.value.length != 0
   ) {
-    stock.value.input.splice(id, 1);
+    if (quantityOfProductsLeft.value < leaveQuantity.value) {
 
-    stock.value.output.push({
-      id: stock.value.output.length,
-      product: leaveProduct.value,
-      value: leaveValue.value,
-      weight: leaveWeight.valueRules,
-      quantity: leaveQuantity.value,
-    });
+      let resultValue =
+        stock.value.input[id].value -
+        (stock.value.input[id].value / leaveQuantity.value) *
+          quantityOfProductsLeft.value;
+          
+      let resultWeight =
+        stock.value.input[id].weight -
+        (stock.value.input[id].weight / leaveQuantity.value) *
+          quantityOfProductsLeft.value;
 
-    const docRef = doc(db, "user", idUser.value);
+      // add the product to the output
+      stock.value.output.push({
+        id: stock.value.output.length,
+        product: leaveProduct.value,
+        value: resultValue,
+        weight: resultWeight,
+        quantity: quantityOfProductsLeft.value,
+      });
 
-    await updateDoc(docRef, {
-      stock: stock.value,
-    });
+      //removes the desired amount of products
+      stock.value.input[id].quantity =
+        parseInt(stock.value.input[id].quantity) -
+        parseInt(quantityOfProductsLeft.value);
 
-    handlerEditProduct.close();
+      stock.value.input[id].weight =
+        stock.value.input[id].weight -
+        (stock.value.input[id].weight / leaveQuantity.value) *
+          quantityOfProductsLeft.value;
+
+      stock.value.input[id].value =
+        stock.value.input[id].value -
+        (stock.value.input[id].value / leaveQuantity.value) *
+          quantityOfProductsLeft.value;
+
+    } else if (quantityOfProductsLeft.value === leaveQuantity.value) {
+
+      let resultValue =
+        stock.value.input[id].value -
+        (stock.value.input[id].value / leaveQuantity.value) *
+          quantityOfProductsLeft.value;
+      let resultWeight =
+        stock.value.input[id].weight -
+        (stock.value.input[id].weight / leaveQuantity.value) *
+          quantityOfProductsLeft.value;
+
+      stock.value.output.push({
+        id: stock.value.output.length,
+        product: leaveProduct.value,
+        value: resultValue,
+        weight: resultWeight,
+        quantity: quantityOfProductsLeft.value,
+      });
+
+      // removes the product from the input
+      stock.value.input.splice(id, 1);
+    }
+
+    saveDataToFirestore();
+    updateTheAnalysis();
+    quantityOfProductsLeft.value = ""
+    handlerLeaveProduct.close();
   }
 };
 
@@ -448,6 +486,50 @@ theme.global.name.value = JSON.parse(localStorage.getItem("theme"))
 const toggleTheme = () => {
   theme.global.name.value = theme.global.current.value.dark ? "light" : "dark";
   localStorage.setItem("theme", JSON.stringify(theme.global.name.value));
+};
+
+// save data to firestore
+
+const saveDataToFirestore = async () => {
+  const docRef = doc(db, "user", idUser.value);
+
+  await updateDoc(docRef, {
+    stock: stock.value,
+  });
+};
+
+// update the analysis
+
+const updateTheAnalysis = async () => {
+  const q = query(
+    collection(db, "user"),
+    where("email", "==", cookie.get("cookie").email)
+  );
+  const querySnapshot = await getDocs(q);
+
+  querySnapshot.forEach((doc) => {
+    totalValueInStock.value = 0;
+    totalProducts.value = 0;
+    totalValueInDepartures.value = 0;
+
+    // get the total value of stock and quantity of products
+
+    doc.data().stock.input.forEach((product) => {
+      totalValueInStock.value += parseInt(product.value);
+      totalProducts.value += parseInt(product.quantity);
+    });
+
+    // get the total value of exits
+    doc.data().stock.output.forEach((product) => {
+      totalValueInDepartures.value += parseInt(product.value);
+    });
+  });
+};
+
+const validateInput = () => {
+  if (parseInt(quantityOfProductsLeft.value) > parseInt(leaveQuantity.value)) {
+    quantityOfProductsLeft.value = leaveQuantity.value;
+  }
 };
 </script>
 

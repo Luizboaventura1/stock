@@ -27,8 +27,8 @@ export default createVuetify({
         colors: {
           textPrimary: "#000",
           primary: '#fff',
-          secondary: '#dbdbdb',
-          third: "#dbdbdb"
+          secondary: '#c2c2c2',
+          third: "#c2c2c2"
         }
       }
     },

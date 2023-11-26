@@ -30,9 +30,9 @@ export const formRules = {
 
   quantityRules: [
     (value) => {
-      if (value.length > 0) return true;
+      if (parseInt(value) > 0) return true;
 
-      return errorMessages.minLength;
+      return "Minimum length of 1 caracter!";
     },
   ],
 };

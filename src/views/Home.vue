@@ -29,4 +29,12 @@
 }
 </style>
 
-<script setup></script>
+<script setup>
+import { useTheme } from "vuetify";
+
+const theme = useTheme();
+
+theme.global.name.value = JSON.parse(localStorage.getItem("theme"))
+  ? JSON.parse(localStorage.getItem("theme"))
+  : "dark";
+</script>
