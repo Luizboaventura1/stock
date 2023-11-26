@@ -37,6 +37,7 @@ import { ref } from "vue";
 import { collection, query, getDocs, where } from "firebase/firestore";
 import { db } from "@/plugins/firebase";
 import { useCookie } from "@/composables/useCookie";
+import { useRouter } from "vue-router";
 
 let email = ref("");
 let password = ref("");
@@ -53,7 +54,7 @@ const login = async () => {
         password: password.value,
       });
 
-      location.href = "/panel";
+      useRouter().push('/panel')
     } catch (error) {
       alert("Erro ao fazer login: " + error.message);
     }

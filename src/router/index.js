@@ -1,8 +1,5 @@
 // Composables
 import { createRouter, createWebHistory } from 'vue-router'
-import { useCookie } from '@/composables/useCookie'
-
-const cookie = useCookie().get('cookie')
 
 const routes = [
   {
