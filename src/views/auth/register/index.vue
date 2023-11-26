@@ -55,7 +55,7 @@ const register = async () => {
         password: password.value
       })
       
-      location.href = "/dashboard/panel";
+      location.href = "/panel";
     } catch (error) {
       alert('Erro ao adicionar usuário: ' + error.message);
     }

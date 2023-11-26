@@ -18,21 +18,8 @@ const routes = [
     component: () => import('@/views/auth/login')
   },
   {
-    path: '/dashboard',
-    component: () => import('@/views/dashboard'),
-    beforeEnter: (to, from, next) => {
-      if (cookie.status) 
-        return next()
-       else 
-        return next('/auth/register')
-    },
-
-    children: [
-      {
-        path: '/panel',
-        component: () => import('@/views/dashboard/panel'),
-      }
-    ]
+    path: '/panel',
+    component: () => import('@/views/dashboard/panel')
   }
 ]
 

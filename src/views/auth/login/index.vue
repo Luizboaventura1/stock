@@ -53,7 +53,7 @@ const login = async () => {
         password: password.value,
       });
 
-      location.href = "/dashboard/panel";
+      location.href = "/panel";
     } catch (error) {
       alert("Erro ao fazer login: " + error.message);
     }
