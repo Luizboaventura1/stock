@@ -15,8 +15,14 @@ const routes = [
     component: () => import('@/views/auth/login')
   },
   {
-    path: '/dashboard/panel',
-    component: () => import('@/views/dashboard/panel/index.vue')
+    path: '/dashboard',
+    component: () => import('@/views/dashboard/'),
+    children: [
+      {
+        path: '/dashboard/panel',
+        component: () => import('@/views/dashboard/panel'),
+      }
+    ]
   }
 ]
 
