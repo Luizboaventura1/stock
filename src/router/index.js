@@ -16,7 +16,7 @@ const routes = [
   },
   {
     path: '/dashboard/panel',
-    component: () => import('@/views/dashboard/panel')
+    component: () => import('@/views/dashboard/panel/index.vue')
   }
 ]
 
