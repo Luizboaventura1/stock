@@ -35,6 +35,8 @@ import { db } from "@/plugins/firebase";
 import { useCookie } from "@/composables/useCookie"
 import { useRouter } from "vue-router";
 
+let router = useRouter()
+
 let email = ref("");
 let password = ref("");
 
@@ -56,7 +58,7 @@ const register = async () => {
         password: password.value
       })
       
-      useRouter().push('/panel')
+      router.push('/panel')
     } catch (error) {
       alert('Erro ao adicionar usuário: ' + error.message);
     }
