@@ -1,5 +1,8 @@
 // Composables
 import { createRouter, createWebHistory } from 'vue-router'
+import { useCookie } from '@/composables/useCookie'
+
+const cookie = useCookie().get('cookie')
 
 const routes = [
   {
@@ -16,10 +19,17 @@ const routes = [
   },
   {
     path: '/dashboard',
-    component: () => import('@/views/dashboard/'),
+    component: () => import('@/views/dashboard'),
+    beforeEnter: (to, from, next) => {
+      if (cookie.status) 
+        return next()
+       else 
+        return next('/auth/register')
+    },
+
     children: [
       {
-        path: '/dashboard/panel',
+        path: '/panel',
         component: () => import('@/views/dashboard/panel'),
       }
     ]
