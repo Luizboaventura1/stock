@@ -1,5 +1,5 @@
 <template>
-  <v-app class="d-flex justify-center h-100 bg-primary">
+  <v-app :theme="currentTheme" class="d-flex justify-center h-100 bg-primary">
     <v-container class="h-100 d-flex justify-center align-center">
       <form class="pa-5 rounded-lg bg-third">
         <h1>Fazer login</h1>
@@ -39,7 +39,7 @@ import { db } from "@/plugins/firebase";
 import { useCookie } from "@/composables/useCookie";
 import { useRouter } from "vue-router";
 
-let router = useRouter()
+let router = useRouter();
 
 let email = ref("");
 let password = ref("");
@@ -56,7 +56,7 @@ const login = async () => {
         password: password.value,
       });
 
-      router.push('/panel')
+      router.push("/panel");
     } catch (error) {
       alert("Erro ao fazer login: " + error.message);
     }
@@ -76,20 +76,23 @@ const checkInFirestore = async (email, password) => {
   const q = query(collection(db, "user"), where("email", "==", email));
   const querySnapshot = await getDocs(q);
 
-  let result = false
+  let result = false;
 
-  querySnapshot.forEach(doc => {
+  querySnapshot.forEach((doc) => {
     if (doc.data().email === email && doc.data().password === password) {
-      result = true
+      result = true;
     }
-  })
+  });
 
-  return result
+  return result;
 };
+
+const currentTheme = JSON.parse(localStorage.getItem("theme"))
+  ? JSON.parse(localStorage.getItem("theme"))
+  : "dark";
 </script>
 
 <style lang="scss" scoped>
-
 form {
   width: 100%;
   max-width: 300px;

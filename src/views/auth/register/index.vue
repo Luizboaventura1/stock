@@ -1,5 +1,5 @@
 <template>
-  <v-app class="d-flex justify-center h-100 bg-primary">
+  <v-app :theme="currentTheme" class="d-flex justify-center h-100 bg-primary">
     <v-container class="h-100 d-flex justify-center align-center">
       <form class="pa-5 rounded-lg bg-third">
         <h1 class="text-textPrimary">Criar conta</h1>
@@ -57,8 +57,14 @@ const register = async () => {
         email: email.value,
         password: password.value
       })
-      
-      router.push('/panel')
+
+      let statusCookie = setInterval(() => {
+        if (useCookie().get('cookie').status) {
+          clearInterval(statusCookie)
+          return router.push('/panel')
+        }
+      }, 400)
+    
     } catch (error) {
       alert('Erro ao adicionar usuário: ' + error.message);
     }
@@ -85,6 +91,10 @@ const checkInFirestore = async (email) => {
 
   return true; // Conta não existe
 };
+
+const currentTheme = JSON.parse(localStorage.getItem("theme"))
+  ? JSON.parse(localStorage.getItem("theme"))
+  : "dark";
 
 </script>
 

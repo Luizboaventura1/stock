@@ -37,7 +37,7 @@
         </v-col>
         <v-col cols="12" sm="4" class="d-flex justify-center pa-0">
           <CardPanel>
-            <TitleCardPanel sm> Total products </TitleCardPanel>
+            <TitleCardPanel sm> Total products in stock </TitleCardPanel>
             <TitleComponent md>
               {{ totalProducts }}
             </TitleComponent>
@@ -68,7 +68,7 @@
                 <tr v-for="(item, index) in stock.input" :key="item.product">
                   <td>{{ item.id }}</td>
                   <td>{{ item.product }}</td>
-                  <td>{{ item.weight }} Kg</td>
+                  <td>{{ parseInt(item.weight).toFixed(2) }} Kg</td>
                   <td>{{ item.quantity }}</td>
                   <td>{{ formatValue(item.value) }}</td>
                   <td>
@@ -112,7 +112,7 @@
                 <tr v-for="item in stock.output" :key="item.product">
                   <td>{{ item.id }}</td>
                   <td>{{ item.product }}</td>
-                  <td>{{ item.weight }} Kg</td>
+                  <td>{{ parseInt(item.weight).toFixed(2) }} Kg</td>
                   <td>{{ item.quantity }}</td>
                   <td>{{ formatValue(item.value) }}</td>
                 </tr>
@@ -175,24 +175,24 @@
       <v-text-field
         :rules="formRules.productRules"
         label="Product name"
-        v-model="editProduct"
+        v-model="product"
       ></v-text-field>
       <v-text-field
         :rules="formRules.valueRules"
         label="Value"
         prefix="R$"
-        v-model="editValue"
+        v-model="value"
       ></v-text-field>
       <v-text-field
         :rules="formRules.weightRules"
         label="Weight"
         suffix="Kg"
-        v-model="editWeight"
+        v-model="weight"
       ></v-text-field>
       <v-text-field
         :rules="formRules.quantityRules"
         label="Quantity"
-        v-model="editQuantity"
+        v-model="quantity"
       ></v-text-field>
       <addProductButton @EventButton="EditProduct(currentIdProduct)">
         Confirm
@@ -243,6 +243,8 @@ import AnalysisPanelRoot from "@/components/AnalysisPanel/AnalysisPanelRoot.vue"
 import { ref } from "vue";
 import CardPanel from "@/components/AnalysisPanel/CardPanel.vue";
 import TitleCardPanel from "@/components/AnalysisPanel/TitleCardPanel.vue";
+import createProduct from "@/composables/createProduct";
+import productCalculation from "@/composables/productCalculation";
 import {
   collection,
   query,
@@ -313,31 +315,32 @@ let value = ref("");
 
 const addNewProduct = async () => {
   if (
-    product.value.length != 0 &&
-    quantity.value.length != 0 &&
-    value.value.length != 0 &&
-    quantity.value.length != 0
+    validateProductInput(
+      product.value,
+      weight.value,
+      quantity.value,
+      value.value
+    )
   ) {
-    stock.value.input.push({
-      id: stock.value.input.length,
-      product: product.value,
-      weight: weight.value,
-      quantity: quantity.value,
-      value: value.value,
-    });
+    stock.value.input.push(
+      createProduct(
+        stock.value.input.length,
+        product.value,
+        weight.value,
+        quantity.value,
+        value.value
+      )
+    );
 
     saveDataToFirestore();
     updateTheAnalysis();
     handlerAddProduct.close();
   }
+
+  clearAllInputs();
 };
 
 // Edit product
-
-let editProduct = ref("");
-let editWeight = ref("");
-let editQuantity = ref("");
-let editValue = ref("");
 
 let stateModalEditProduct = ref(false);
 let currentIdProduct = ref();
@@ -346,26 +349,27 @@ const handlerEditProduct = {
   open: (id) => {
     stateModalEditProduct.value = true;
     currentIdProduct.value = id;
-    editProduct.value = stock.value.input[id].product;
-    editWeight.value = stock.value.input[id].weight;
-    editQuantity.value = stock.value.input[id].quantity;
-    editValue.value = stock.value.input[id].value;
+    product.value = stock.value.input[id].product;
+    weight.value = stock.value.input[id].weight;
+    quantity.value = stock.value.input[id].quantity;
+    value.value = stock.value.input[id].value;
   },
-  close: () => (stateModalEditProduct.value = false),
+  close: () => {
+    stateModalEditProduct.value = false
+    clearAllInputs();
+  }
 };
 
 const EditProduct = async (id) => {
   if (
-    editProduct.value.length != 0 &&
-    editWeight.value.length != 0 &&
-    editValue.value.length != 0 &&
-    editQuantity.value.length
+    validateProductInput(
+      product.value,
+      weight.value,
+      quantity.value,
+      value.value
+    )
   ) {
-    stock.value.input[id].product = editProduct.value;
-    stock.value.input[id].weight = editWeight.value;
-    stock.value.input[id].quantity = editQuantity.value;
-    stock.value.input[id].value = editValue.value;
-
+    editStock(id, product.value, weight.value, quantity.value, value.value);
     saveDataToFirestore();
     updateTheAnalysis();
     handlerEditProduct.close();
@@ -395,76 +399,82 @@ const handlerLeaveProduct = {
 };
 
 const LeaveProduct = async (id) => {
+  let valueL = stock.value.input[id].value;
+  let weightL = stock.value.input[id].weight;
+
   if (
-    leaveProduct.value.length != 0 &&
-    leaveWeight.value.length != 0 &&
-    leaveValue.value.length != 0 &&
-    leaveQuantity.value.length != 0
+    validateProductInput(
+      leaveProduct.value,
+      leaveWeight.value,
+      leaveQuantity.value,
+      leaveValue.value
+    )
   ) {
     if (quantityOfProductsLeft.value < leaveQuantity.value) {
-
-      let resultValue =
-        stock.value.input[id].value -
-        (stock.value.input[id].value / leaveQuantity.value) *
-          quantityOfProductsLeft.value;
-          
-      let resultWeight =
-        stock.value.input[id].weight -
-        (stock.value.input[id].weight / leaveQuantity.value) *
-          quantityOfProductsLeft.value;
-
       // add the product to the output
       stock.value.output.push({
         id: stock.value.output.length,
         product: leaveProduct.value,
-        value: resultValue,
-        weight: resultWeight,
+        value: productCalculation().output(
+          valueL,
+          leaveQuantity.value,
+          quantityOfProductsLeft.value
+        ),
+        weight: productCalculation().output(
+          weightL,
+          leaveQuantity.value,
+          quantityOfProductsLeft.value
+        ),
         quantity: quantityOfProductsLeft.value,
       });
 
-      //removes the desired amount of products
+      // removes the desired amount of products
       stock.value.input[id].quantity =
         parseInt(stock.value.input[id].quantity) -
         parseInt(quantityOfProductsLeft.value);
 
-      stock.value.input[id].weight =
-        stock.value.input[id].weight -
-        (stock.value.input[id].weight / leaveQuantity.value) *
-          quantityOfProductsLeft.value;
+      stock.value.input[id].weight = productCalculation().input(
+        weightL,
+        weightL,
+        leaveQuantity.value,
+        quantityOfProductsLeft.value
+      );
 
-      stock.value.input[id].value =
-        stock.value.input[id].value -
-        (stock.value.input[id].value / leaveQuantity.value) *
-          quantityOfProductsLeft.value;
-
-    } else if (quantityOfProductsLeft.value === leaveQuantity.value) {
-
-      let resultValue =
-        stock.value.input[id].value -
-        (stock.value.input[id].value / leaveQuantity.value) *
-          quantityOfProductsLeft.value;
-      let resultWeight =
-        stock.value.input[id].weight -
-        (stock.value.input[id].weight / leaveQuantity.value) *
-          quantityOfProductsLeft.value;
-
+      stock.value.input[id].value = productCalculation().input(
+        valueL,
+        valueL,
+        leaveQuantity.value,
+        quantityOfProductsLeft.value
+      );
+    } else if (
+      parseInt(quantityOfProductsLeft.value) === parseInt(leaveQuantity.value)
+    ) {
       stock.value.output.push({
         id: stock.value.output.length,
         product: leaveProduct.value,
-        value: resultValue,
-        weight: resultWeight,
+        value: productCalculation().output(
+          valueL,
+          leaveQuantity.value,
+          quantityOfProductsLeft.value
+        ),
+        weight: productCalculation().output(
+          weightL,
+          leaveQuantity.value,
+          quantityOfProductsLeft.value
+        ),
         quantity: quantityOfProductsLeft.value,
       });
 
       // removes the product from the input
       stock.value.input.splice(id, 1);
     }
-
-    saveDataToFirestore();
-    updateTheAnalysis();
-    quantityOfProductsLeft.value = ""
-    handlerLeaveProduct.close();
   }
+
+  saveDataToFirestore();
+  updateTheAnalysis();
+  clearAllInputs();
+  quantityOfProductsLeft.value = "";
+  handlerLeaveProduct.close();
 };
 
 // Analysis product
@@ -515,13 +525,16 @@ const updateTheAnalysis = async () => {
     // get the total value of stock and quantity of products
 
     doc.data().stock.input.forEach((product) => {
-      totalValueInStock.value += parseInt(product.value);
-      totalProducts.value += parseInt(product.quantity);
+      totalValueInStock.value =
+        parseInt(totalValueInStock.value) + parseInt(product.value);
+      totalProducts.value =
+        parseInt(totalProducts.value) + parseInt(product.quantity);
     });
 
     // get the total value of exits
     doc.data().stock.output.forEach((product) => {
-      totalValueInDepartures.value += parseInt(product.value);
+      totalValueInDepartures.value =
+        parseInt(totalValueInDepartures.value) + parseInt(product.value);
     });
   });
 };
@@ -530,6 +543,37 @@ const validateInput = () => {
   if (parseInt(quantityOfProductsLeft.value) > parseInt(leaveQuantity.value)) {
     quantityOfProductsLeft.value = leaveQuantity.value;
   }
+};
+
+const validateProductInput = (product, weight, quantity, value) => {
+  if (
+    product.length != 0 &&
+    weight.length != 0 &&
+    quantity.length != 0 &&
+    value.length != 0
+  )
+    return true;
+
+  return false;
+};
+
+const editStock = (id, product, weight, quantity, value) => {
+  stock.value.input[id].product = product;
+  stock.value.input[id].weight = weight;
+  stock.value.input[id].quantity = quantity;
+  stock.value.input[id].value = value;
+};
+
+const clearAllInputs = () => {
+  product.value = "";
+  weight.value = "";
+  quantity.value = "";
+  value.value = "";
+  leaveProduct.value = "";
+  leaveWeight.value = "";
+  leaveQuantity.value = "";
+  leaveValue.value = "";
+  quantityOfProductsLeft.value = "";
 };
 </script>
 

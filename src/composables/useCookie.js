@@ -6,7 +6,7 @@ export const useCookie = () => {
   const get = (name) => {
     return JSON.parse(localStorage.getItem(name))
       ? JSON.parse(localStorage.getItem(name))
-      : undefined;
+      : {status: false};
   };
 
   return {

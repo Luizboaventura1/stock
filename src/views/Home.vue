@@ -1,5 +1,10 @@
 <template>
-  <v-app class="d-flex justify-center h-100 bg-primary">
+  <v-app class="h-100 bg-primary">
+    <v-container class="d-flex justify-end">
+      <GoPanel v-if="cookie.status" @click="$router.push('/panel')">
+        Ir para o painel
+      </GoPanel>
+    </v-container>
     <v-container class="h-100 d-flex align-center">
       <v-main class="px-4 text-center">
         <h1 class="font-weight-bold text-textPrimary text-h3">Stock</h1>
@@ -8,7 +13,7 @@
         </p>
         <router-link
           class="text-decoration-none font-weight-bold text-white bg-blue-darken-3 py-3 px-12 rounded-xl"
-          to="/auth/register"
+          :to="cookie.status ? '/panel' : '/auth/register'"
         >
           Começar
         </router-link>
@@ -31,6 +36,10 @@
 
 <script setup>
 import { useTheme } from "vuetify";
+import GoPanel from "@/components/GoPanel.vue";
+import { useCookie } from "@/composables/useCookie";
+
+const cookie = useCookie().get('cookie')
 
 const theme = useTheme();
 
