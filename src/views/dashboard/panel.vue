@@ -355,9 +355,9 @@ const handlerEditProduct = {
     value.value = stock.value.input[id].value;
   },
   close: () => {
-    stateModalEditProduct.value = false
+    stateModalEditProduct.value = false;
     clearAllInputs();
-  }
+  },
 };
 
 const EditProduct = async (id) => {
@@ -410,7 +410,7 @@ const LeaveProduct = async (id) => {
       leaveValue.value
     )
   ) {
-    if (quantityOfProductsLeft.value < leaveQuantity.value) {
+    if (leaveQuantity.value > quantityOfProductsLeft.value) {
       // add the product to the output
       stock.value.output.push({
         id: stock.value.output.length,

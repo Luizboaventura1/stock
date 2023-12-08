@@ -18,8 +18,8 @@ const routes = [
     component: () => import("@/views/auth/login"),
   },
   {
-    path: "/panel",
-    component: () => import("@/views/dashboard/panel"),
+    path: "/dashboard/panel",
+    component: () => import("@/views/dashboard/panel.vue"),
     beforeEnter: (to, from, next) => {
       if (!cookie.status) return next({ path: "/auth/register" });
 

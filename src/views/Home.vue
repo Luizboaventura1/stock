@@ -1,7 +1,7 @@
 <template>
   <v-app class="h-100 bg-primary">
     <v-container class="d-flex justify-end">
-      <GoPanel v-if="cookie.status" @click="$router.push('/panel')">
+      <GoPanel v-if="cookie.status" @click="$router.push('/dashboard/panel')">
         Ir para o painel
       </GoPanel>
     </v-container>
@@ -13,7 +13,7 @@
         </p>
         <router-link
           class="text-decoration-none font-weight-bold text-white bg-blue-darken-3 py-3 px-12 rounded-xl"
-          :to="cookie.status ? '/panel' : '/auth/register'"
+          :to="cookie.status ? '/dashboard/panel' : '/auth/register'"
         >
           Começar
         </router-link>
