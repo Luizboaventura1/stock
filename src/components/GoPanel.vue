@@ -1,7 +1,7 @@
 <template>
-  <v-btn
-    class="font-weight-bold bg-blue-darken-3 text-white elevation-0 rounded"
+  <button
+    class="font-weight-medium text-white elevation-0 rounded primary-button py-2 px-4"
   >
     <slot />
-  </v-btn>
+  </button>
 </template>

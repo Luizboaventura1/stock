@@ -1,6 +1,6 @@
 <template>
   <v-app class="h-100 bg-primary">
-    <nav class="bg-third d-flex align-center w-100 justify-space-between px-4">
+    <nav class="main-nav d-flex align-center w-100 justify-space-between px-4">
       <router-link to="/" class="text-decoration-none">
         <TitleComponent sm> Stock </TitleComponent>
       </router-link>
@@ -45,15 +45,15 @@
         </v-col>
       </AnalysisPanelRoot>
       <header class="d-flex justify-start w-100">
-        <addProductButton @EventButton="handlerAddProduct.open()">
+        <PrimaryButton @click="handlerAddProduct.open()">
           Add Product
-        </addProductButton>
+        </PrimaryButton>
       </header>
       <v-main class="my-7">
         <v-row class="w-100">
           <v-col cols="12" md="6">
             <TitleComponent sm> Input </TitleComponent>
-            <v-table class="bg-third mt-3 rounded">
+            <v-table class="bg-third mt-3 rounded main-table list-modal">
               <thead>
                 <tr>
                   <th class="text-left">Id</th>
@@ -76,14 +76,16 @@
                       <template v-slot:activator="{ props }">
                         <EditButton size="30" v-bind="props" />
                       </template>
-                      <v-list>
-                        <v-list-item>
+                      <v-list class="list-modal">
+                        <v-list-item class="px-2">
                           <v-list-item-title
+                            class="list-item-modal py-1 px-3 rounded"
                             @click="handlerEditProduct.open(index)"
                             style="cursor: pointer"
                             >Edit</v-list-item-title
                           >
                           <v-list-item-title
+                            class="list-item-modal py-1 px-3 rounded"
                             @click="handlerLeaveProduct.open(index)"
                             style="cursor: pointer"
                             >Leave product</v-list-item-title
@@ -98,7 +100,7 @@
           </v-col>
           <v-col cols="12" md="6">
             <TitleComponent sm> Output </TitleComponent>
-            <v-table class="bg-third mt-3 rounded">
+            <v-table class="bg-third mt-3 rounded main-table list-modal">
               <thead>
                 <tr>
                   <th class="text-left">Id</th>
@@ -156,9 +158,7 @@
         label="Quantity"
         v-model="quantity"
       ></v-text-field>
-      <addProductButton @EventButton="addNewProduct">
-        Add new product
-      </addProductButton>
+      <PrimaryButton @click="addNewProduct"> Add new product </PrimaryButton>
     </AddProductModal>
 
     <!--Edit Product-->
@@ -194,9 +194,9 @@
         label="Quantity"
         v-model="quantity"
       ></v-text-field>
-      <addProductButton @EventButton="EditProduct(currentIdProduct)">
+      <PrimaryButton @click="EditProduct(currentIdProduct)">
         Confirm
-      </addProductButton>
+      </PrimaryButton>
     </AddProductModal>
 
     <!--Leave product-->
@@ -224,16 +224,15 @@
         :maxLength="leaveQuantity"
         @input="validateInput"
       ></v-text-field>
-      <addProductButton @EventButton="LeaveProduct(currentIdProduct)">
+      <PrimaryButton @click="LeaveProduct(currentIdProduct)">
         Confirm
-      </addProductButton>
+      </PrimaryButton>
     </AddProductModal>
   </v-app>
 </template>
 
 <script setup>
 import TitleComponent from "@/components/TitleComponent.vue";
-import addProductButton from "@/components/addProductButton.vue";
 import AddProductModal from "@/components/AddProductModal/AddProductModal.vue";
 import CloseButton from "@/components/CloseButton.vue";
 import EditButton from "@/components/EditButton.vue";
@@ -257,6 +256,8 @@ import { db } from "@/plugins/firebase";
 import { onMounted } from "vue";
 import { useCookie } from "@/composables/useCookie";
 import { useTheme } from "vuetify";
+import PrimaryButton from "@/components/PrimaryButton.vue";
+import { watchEffect } from "vue";
 
 const theme = useTheme();
 
@@ -402,14 +403,7 @@ const LeaveProduct = async (id) => {
   let valueL = stock.value.input[id].value;
   let weightL = stock.value.input[id].weight;
 
-  if (
-    validateProductInput(
-      leaveProduct.value,
-      leaveWeight.value,
-      leaveQuantity.value,
-      leaveValue.value
-    )
-  ) {
+  if (quantityOfProductsLeft.value) {
     if (leaveQuantity.value > quantityOfProductsLeft.value) {
       // add the product to the output
       stock.value.output.push({
@@ -468,13 +462,12 @@ const LeaveProduct = async (id) => {
       // removes the product from the input
       stock.value.input.splice(id, 1);
     }
+    saveDataToFirestore();
+    updateTheAnalysis();
+    clearAllInputs();
+    quantityOfProductsLeft.value = "";
+    handlerLeaveProduct.close();
   }
-
-  saveDataToFirestore();
-  updateTheAnalysis();
-  clearAllInputs();
-  quantityOfProductsLeft.value = "";
-  handlerLeaveProduct.close();
 };
 
 // Analysis product
@@ -539,6 +532,8 @@ const updateTheAnalysis = async () => {
   });
 };
 
+watchEffect(() => updateTheAnalysis)
+
 const validateInput = () => {
   if (parseInt(quantityOfProductsLeft.value) > parseInt(leaveQuantity.value)) {
     quantityOfProductsLeft.value = leaveQuantity.value;
@@ -577,4 +572,35 @@ const clearAllInputs = () => {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.main-table {
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.main-nav {
+  background-color: #202024;
+}
+
+.list-modal {
+  background-color: #121214 !important;
+  border: 1px solid #4f4f4f;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.614) !important;
+}
+
+.list-modal::-webkit-scrollbar {
+  width: 5px !important;
+}
+
+.list-item-modal {
+  transition: 0.3s;
+  font-size: 15px !important;
+  &:hover {
+    background-color: #212124;
+  }
+}
+
+.list-modal::-webkit-scrollbar-thumb {
+  width: 5px !important;
+}
+</style>

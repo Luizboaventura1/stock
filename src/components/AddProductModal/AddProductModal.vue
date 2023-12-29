@@ -25,12 +25,13 @@ let props = defineProps({
   position: fixed;
   left: 0;
   top: 0;
-  background-color: rgba(0, 0, 0, 0.592);
+  background-color: rgba(0, 0, 0, 0.781);
 }
 
 .modal {
   width: 100%;
   max-width: 350px;
+  border: 1px solid #3b3b3b;
 }
 
 .v-enter-active,

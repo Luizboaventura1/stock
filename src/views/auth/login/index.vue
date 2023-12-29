@@ -1,25 +1,21 @@
 <template>
   <v-app :theme="currentTheme" class="d-flex justify-center h-100 bg-primary">
     <v-container class="h-100 d-flex justify-center align-center">
-      <form class="pa-5 rounded-lg bg-third">
-        <h1>Fazer login</h1>
+      <form class="pa-5 rounded-lg">
+        <h1 class="text-textPrimary font-weight-medium mb-3">Fazer login</h1>
         <input
-          class="w-100 py-3 px-3 text-textPrimary bg-primary my-3 rounded"
+          class="w-100 pa-3 text-textPrimary bg-primary rounded mb-3"
           placeholder="Seu email"
           type="email"
           v-model="email"
         />
         <input
-          class="w-100 py-3 px-3 text-textPrimary bg-primary my-3 rounded"
+          class="w-100 pa-3 text-textPrimary bg-primary rounded mb-4"
           placeholder="Sua senha"
           type="password"
           v-model="password"
         />
-        <v-btn
-          class="w-100 rounded font-weight-medium bg-blue-darken-1 mt-2"
-          @click="login"
-          >Login</v-btn
-        >
+        <PrimaryButton class="w-100" @click.prevent="login">Entrar</PrimaryButton>
         <p class="text-center mt-3">
           <router-link
             to="/auth/register"
@@ -38,6 +34,8 @@ import { collection, query, getDocs, where } from "firebase/firestore";
 import { db } from "@/plugins/firebase";
 import { useCookie } from "@/composables/useCookie";
 import { useRouter } from "vue-router";
+import PrimaryButton from "@/components/PrimaryButton.vue";
+import { onMounted } from "vue";
 
 let router = useRouter();
 
@@ -56,7 +54,7 @@ const login = async () => {
         password: password.value,
       });
 
-      router.push("/panel");
+      router.push("/dashboard/panel");
     } catch (error) {
       alert("Erro ao fazer login: " + error.message);
     }
@@ -90,15 +88,24 @@ const checkInFirestore = async (email, password) => {
 const currentTheme = JSON.parse(localStorage.getItem("theme"))
   ? JSON.parse(localStorage.getItem("theme"))
   : "dark";
+
+
 </script>
 
 <style lang="scss" scoped>
+$background-form: rgb(42, 41, 43);
+
 form {
   width: 100%;
   max-width: 300px;
+  background-color: $background-form;
+
+  input:focus {
+    outline: 2px solid rgb(98, 100, 102);
+  }
 
   h1 {
-    font-size: 25px;
+    font-size: 17px;
   }
 
   input {
